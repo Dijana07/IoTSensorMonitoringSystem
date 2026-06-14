@@ -1,16 +1,14 @@
+using Statistics.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IoT.Shared.Enums
+namespace Statistics.Interfaces
 {
-	public enum SensorStatus
+    public interface IStatisticsProcessor
 	{
-		Stable,
-		Alarm,
-		Error,
-		Unactive
+		Result ProcessData();
 	}
 }
