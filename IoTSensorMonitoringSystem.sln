@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35506.116 d17.12
+VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Statistics", "Statistics\Statistics.csproj", "{D681F626-63D4-4E3E-A716-95E3A013BE05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monitoring", "Monitoring\Monitoring.csproj", "{78E28B0F-F781-41F4-8955-59C6EED97D5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IoT.Shared", "IoT.Shared\IoT.Shared.csproj", "{2A610F5A-4CCC-41E7-A3B8-25A24795B7D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{D681F626-63D4-4E3E-A716-95E3A013BE05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D681F626-63D4-4E3E-A716-95E3A013BE05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D681F626-63D4-4E3E-A716-95E3A013BE05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78E28B0F-F781-41F4-8955-59C6EED97D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78E28B0F-F781-41F4-8955-59C6EED97D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78E28B0F-F781-41F4-8955-59C6EED97D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78E28B0F-F781-41F4-8955-59C6EED97D5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A610F5A-4CCC-41E7-A3B8-25A24795B7D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A610F5A-4CCC-41E7-A3B8-25A24795B7D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A610F5A-4CCC-41E7-A3B8-25A24795B7D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A610F5A-4CCC-41E7-A3B8-25A24795B7D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

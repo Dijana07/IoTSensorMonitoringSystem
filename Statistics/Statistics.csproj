@@ -94,5 +94,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IoT.Shared\IoT.Shared.csproj">
+      <Project>{2a610f5a-4ccc-41e7-a3b8-25a24795b7d0}</Project>
+      <Name>IoT.Shared</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
