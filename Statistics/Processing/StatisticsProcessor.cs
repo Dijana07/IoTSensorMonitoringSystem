@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Statistics.Processing
 {
-    public class StatisticsViewModel : IStatisticsProcessor
+    public class StatisticsProcessor : IStatisticsProcessor
 	{
 		private IStatisticsStrategy strategy;
 		private Dictionary<string, List<Reading>> data;
 		private IDataProvider dataProvider;
 
-		public StatisticsViewModel(IStatisticsStrategy strategy, IDataProvider dataProvider)
+		public StatisticsProcessor(IStatisticsStrategy strategy, IDataProvider dataProvider)
 		{
 			this.strategy = strategy;
 			this.dataProvider = dataProvider;

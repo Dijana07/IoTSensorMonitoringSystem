@@ -9,7 +9,6 @@ namespace Statistics.Models
     public class Result
 	{
         public Guid SensorId { get; set; }
-
         public double Value { get; set; }
 
     }

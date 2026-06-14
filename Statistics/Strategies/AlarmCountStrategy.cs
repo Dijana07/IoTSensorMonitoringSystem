@@ -20,5 +20,10 @@ namespace Statistics.Strategies
                 })
                 .ToList();
         }
+
+        public override string ToString()
+        {
+            return "Alarm count";
+        }
     }
 }

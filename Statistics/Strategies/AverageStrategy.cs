@@ -16,9 +16,14 @@ namespace Statistics.Strategies
                 .Select(x => new Result 
                     { 
                         SensorId = x.SensorId,
-                        Value = x.Values.Average()
+                        Value = Math.Round(x.Values.Average(), 2)
                     })
                 .ToList();
+        }
+
+        public override string ToString()
+        {
+            return "Average";
         }
     }
 }

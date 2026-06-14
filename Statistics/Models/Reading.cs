@@ -9,9 +9,12 @@ namespace Statistics.Models
     public class Reading
 	{
 		public Guid SensorId { get; set; }
-
 		public List<double> Values { get; set; }
-
 		public int AlarmCount { get; set; }
-	}
+
+        public string ValuesDisplay
+        {
+            get => string.Join(", ", Values);
+        }
+    }
 }

@@ -29,9 +29,19 @@ namespace Statistics.Processing
             return processor.GetData();
         }
 
+        public void LoadData(DateTime from, DateTime to)
+        {
+            processor.LoadData(from, to);
+        }
+
         public List<Result> ProcessData(DateTime from, DateTime to)
         {
             return processor.ProcessData(from, to);
+        }
+
+        public void SetStatisticsStrategy(IStatisticsStrategy strategy)
+        {
+            processor.SetStatisticsStrategy(strategy);
         }
     }
 }

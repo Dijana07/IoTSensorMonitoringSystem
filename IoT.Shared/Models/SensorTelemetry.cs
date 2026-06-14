@@ -1,4 +1,6 @@
 using IoT.Shared.Enums;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,7 @@ namespace IoT.Shared.Models
 
         public double Value { get; set; }
 
+        [JsonConverter(typeof(StringEnumConverter))]
         public SensorStatus Status { get; set; }
     }
 }
