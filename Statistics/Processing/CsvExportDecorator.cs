@@ -13,19 +13,25 @@ namespace Statistics.Processing
 		private IStatisticsProcessor processor;
 		private IFileWritter writter;
 
-		public CsvExportDecorator()
+		public CsvExportDecorator(IStatisticsProcessor processor, IFileWritter writter)
 		{
-			throw new NotImplementedException();
+			this.processor = processor;
+			this.writter = writter;
 		}
 
 		public void ExportData()
 		{
-			throw new NotImplementedException();
+			writter.Write(GetData());
 		}
 
-        public Result ProcessData()
+        public Dictionary<string, List<Reading>> GetData()
         {
-            throw new NotImplementedException();
+            return processor.GetData();
+        }
+
+        public List<Result> ProcessData(DateTime from, DateTime to)
+        {
+            return processor.ProcessData(from, to);
         }
     }
 }

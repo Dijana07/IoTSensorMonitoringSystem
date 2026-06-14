@@ -9,6 +9,6 @@ namespace Statistics.Interfaces
 {
     public interface IFileWritter
 	{
-		void Write(Dictionary<string, Reading> data);
+		void Write(Dictionary<string, List<Reading>> data);
 	}
 }

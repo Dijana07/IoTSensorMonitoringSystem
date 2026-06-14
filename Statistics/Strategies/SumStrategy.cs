@@ -10,9 +10,15 @@ namespace Statistics.Strategies
 {
     public class SumStrategy : IStatisticsStrategy
     {
-        public Result Calculate(Dictionary<string, Reading> data)
+        public List<Result> Calculate(List<Reading> data)
         {
-            throw new NotImplementedException();
+            return data
+                .Select(x => new Result
+                {
+                    SensorId = x.SensorId,
+                    Value = x.Values.Sum()
+                })
+                .ToList();
         }
     }
 }

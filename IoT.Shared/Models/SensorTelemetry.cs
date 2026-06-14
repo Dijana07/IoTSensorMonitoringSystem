@@ -9,7 +9,7 @@ namespace IoT.Shared.Models
 {
 	public class SensorTelemetry
 	{
-		public Guid Id { get; set; }
+		public Guid SensorId { get; set; }
 
 		public DateTime DateTime { get; set; }
 

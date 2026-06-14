@@ -8,25 +8,43 @@ using System.Threading.Tasks;
 
 namespace Statistics.Processing
 {
-	public class StatisticsViewModel : IStatisticsProcessor
+    public class StatisticsViewModel : IStatisticsProcessor
 	{
 		private IStatisticsStrategy strategy;
-		private Dictionary<string, Reading> data;
-		private IDataReader reader;
+		private Dictionary<string, List<Reading>> data;
+		private IDataProvider dataProvider;
 
-		public void LoadData()
+		public StatisticsViewModel(IStatisticsStrategy strategy, IDataProvider dataProvider)
 		{
-			throw new NotImplementedException();
+			this.strategy = strategy;
+			this.dataProvider = dataProvider;
+			data = new Dictionary<string, List<Reading>>();
 		}
 
-        public Result ProcessData()
+        public Dictionary<string, List<Reading>> GetData()
         {
-            throw new NotImplementedException();
+            return data;
         }
 
-        public StatisticsViewModel()
+        public void LoadData(DateTime from, DateTime to)
 		{
-			throw new NotImplementedException();
+			var loadedData = dataProvider.GetData(from, to);
+			if (loadedData != null) 
+			{
+				data.Add(loadedData.Item1, loadedData.Item2);
+			}
+		}
+
+        public List<Result> ProcessData(DateTime from, DateTime to)
+        {
+            string key = $"{from:yyyy-MM-dd}_{to:yyyy-MM-dd}";
+			var data = dataProvider.GetData(from, to);
+			return strategy.Calculate(data.Item2);
+        }
+
+		public void SetStatisticsStrategy(IStatisticsStrategy strategy)
+		{
+			this.strategy = strategy;
 		}
 	}
 }

@@ -9,6 +9,7 @@ namespace Statistics.Interfaces
 {
     public interface IStatisticsProcessor
 	{
-		Result ProcessData();
+        List<Result> ProcessData(DateTime from, DateTime to);
+        Dictionary<string, List<Reading>> GetData();
 	}
 }

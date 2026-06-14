@@ -8,9 +8,9 @@ namespace Statistics.Models
 {
     public class Result
 	{
-		private Guid sensorId;
-		private double value;
-		private DateTime FromDate;
-		private DateTime FromTo;
-	}
+        public Guid SensorId { get; set; }
+
+        public double Value { get; set; }
+
+    }
 }

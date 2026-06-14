@@ -8,10 +8,10 @@ namespace Statistics.Models
 {
     public class Reading
 	{
-		public double Value { get; set; }
+		public Guid SensorId { get; set; }
 
-		public DateTime DateTime {  get; set; }
+		public List<double> Values { get; set; }
 
-		public bool Alarm { get; set; }
+		public int AlarmCount { get; set; }
 	}
 }

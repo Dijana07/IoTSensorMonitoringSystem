@@ -10,6 +10,6 @@ namespace Statistics.Interfaces
 {
 	public interface IDataReader
 	{
-		Dictionary<string, Reading> ReadData(List<SensorTelemetry> list);
+		List<SensorTelemetry> ReadData(DateTime from, DateTime to);
 	}
 }
