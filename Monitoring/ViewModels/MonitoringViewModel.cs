@@ -25,10 +25,12 @@ namespace Monitoring.ViewModels
     {
         private readonly Monitoring.Commands.CommandManager commandManager;
         private readonly LoggerTxt loggerTxt;
+        private readonly LoggerXml loggerXml;
         private readonly SensorStateMapper stateMapper;
 
         private readonly string sensorsXmlPath = "sensors.xml";
         private readonly string telemetryXmlPath = "telemetry.xml";
+        private readonly string telemetryHistoryXmlPath = "telemetryHistory.xml";
 
         // Za obrisane telemetrije koje želimo da vratimo ako korisnik klikne Undo nakon RemoveSensor
         private readonly Dictionary<Guid, SensorTelemetryContext> _telemetryCache = new Dictionary<Guid, SensorTelemetryContext>();
@@ -122,6 +124,7 @@ namespace Monitoring.ViewModels
         public MainViewModel()
         {
             loggerTxt = new LoggerTxt("activities.txt");
+            loggerXml = new LoggerXml("");
             var systemSensor = new Sensor { Name = "System" };
 
             commandManager = new Monitoring.Commands.CommandManager(loggerTxt, systemSensor);
@@ -138,7 +141,7 @@ namespace Monitoring.ViewModels
                 new PieSeries<int> { Values = new ObservableCollection<int> { 0 }, Name = "Unactive" }
             };
 
-            // Reakcija na izmene u kolekciji senzora radi automatskog upravljanja telemetrijom (važno za Undo/Redo)
+            // Reakcija na izmene u kolekciji senzora radi automatskog upravljanja telemetrijom
             Sensors.CollectionChanged += Sensors_CollectionChanged;
 
             // Osluškujemo promene u Telemetries kolekciji (dodavanje/brisanje) kako bismo osveživali grafikon
@@ -222,10 +225,11 @@ namespace Monitoring.ViewModels
                 Fill = new SolidColorPaint(SKColors.Gray)
             }
                 };
-                    }
+        }
 
         private void Sensors_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            Random rand= new Random();
             if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
             {
                 foreach (Sensor sensor in e.NewItems)
@@ -247,7 +251,7 @@ namespace Monitoring.ViewModels
                             {
                                 SensorId = sensor.Id,
                                 DateTime = DateTime.Now,
-                                Value = sensor.MinValue,
+                                Value = Math.Round(rand.NextDouble() * rand.Next((int)sensor.MinValue, (int)sensor.MaxValue),2),
                                 Status = SensorStatus.Stable
                             }, stateMapper);
 
@@ -337,33 +341,23 @@ namespace Monitoring.ViewModels
         {
             try
             {
-                XDocument sensorsDoc = new XDocument(
-                    new XElement("Sensors",
-                        Sensors.Select(s => new XElement("Sensor",
-                            new XElement("Id", s.Id.ToString()),
-                            new XElement("Name", s.Name),
-                            new XElement("Type", s.Type),
-                            new XElement("Location", s.Location),
-                            new XElement("MinValue", s.MinValue.ToString()),
-                            new XElement("MaxValue", s.MaxValue.ToString())
-                        ))
-                    )
-                );
-                sensorsDoc.Save(sensorsXmlPath);
-
-                XDocument telemetryDoc = new XDocument(
-                    new XElement("Telemetries",
-                        Telemetries.Select(t => new XElement("Telemetry",
-                            new XElement("SensorId", t.Telemetry.SensorId.ToString()),
-                            new XElement("DateTime", t.Telemetry.DateTime.ToString("yyyy-MM-dd HH:mm:ss")),
-                            new XElement("Value", t.Telemetry.Value.ToString()),
-                            new XElement("Status", t.Telemetry.Status.ToString())
-                        ))
-                    )
-                );
-                telemetryDoc.Save(telemetryXmlPath);
+                loggerXml.SaveState(Sensors, Telemetries, sensorsXmlPath, telemetryXmlPath);
             }
-            catch (Exception ex) { MessageBox.Show($"Error writing to XML: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error writing to XML: {ex.Message}");
+            }
+        }
+        private void SaveTelemetryHistory(SensorTelemetry telemetry)
+        {
+            try
+            {
+                loggerXml.SaveSingleTelemetryHistory(telemetry, telemetryHistoryXmlPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error saving telemetry history: {ex.Message}");
+            }
         }
 
         private void OnAddSensor()
@@ -423,15 +417,41 @@ namespace Monitoring.ViewModels
             if (SelectedTelemetry == null) return;
 
             var currentTelemetry = SelectedTelemetry;
+
+            SaveTelemetryHistory(new SensorTelemetry
+            {
+                SensorId = currentTelemetry.Telemetry.SensorId,
+                DateTime = currentTelemetry.Telemetry.DateTime,
+                Value = currentTelemetry.Telemetry.Value,
+                Status = currentTelemetry.Telemetry.Status
+            });
+
             var cmd = new ChangeStateCommand(currentTelemetry);
             commandManager.ExecuteCommand(cmd);
 
-            loggerTxt.Log(new Sensor { Name = "System" }, $"Sensor {currentTelemetry.Telemetry.SensorId} transitioned to state {currentTelemetry.Telemetry.Status}");
+            var sensor = Sensors.FirstOrDefault(
+                s => s.Id == currentTelemetry.Telemetry.SensorId);
+
+            if (sensor != null)
+            {
+                Random rand = new Random();
+
+                currentTelemetry.Telemetry.Value = Math.Round(
+                    sensor.MinValue +
+                    rand.NextDouble() * (sensor.MaxValue - sensor.MinValue),
+                    2);
+
+                currentTelemetry.Telemetry.DateTime = DateTime.Now;
+            }
+
+            loggerTxt.Log(
+                new Sensor { Name = "System" },
+                $"Sensor {currentTelemetry.Telemetry.SensorId} transitioned to state {currentTelemetry.Telemetry.Status}");
 
             _telemetriesView.Refresh();
             SelectedTelemetry = currentTelemetry;
 
-            UpdateChart(); 
+            UpdateChart();
             SaveAllToXml();
         }
 
