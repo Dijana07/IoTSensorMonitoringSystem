@@ -46,5 +46,10 @@ namespace Statistics.Processing
 		{
 			this.strategy = strategy;
 		}
+
+		public string GetStatisticsStrategy()
+		{
+			return strategy.ToString();	
+		}
 	}
 }

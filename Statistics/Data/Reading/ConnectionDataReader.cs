@@ -16,29 +16,22 @@ namespace Statistics.Data.Reading
 
         public List<SensorTelemetry> ReadData(DateTime from, DateTime to)
         {
-            // 1. Kreiraj fabriku kanala za interfejs iz Shared projekta
             var binding = new BasicHttpBinding();
             var address = new EndpointAddress(_serviceUrl);
             var factory = new ChannelFactory<ITelemetryService>(binding, address);
 
-            // 2. Kreiraj kanal (klijenta)
             ITelemetryService client = factory.CreateChannel();
 
             try
             {
-                // 3. Pozovi metodu servisa
                 var data = client.GetTelemetryData(from, to);
-
-                // 4. Zatvori kanal nakon upotrebe
                 ((ICommunicationObject)client).Close();
-
                 return data;
             }
             catch (Exception ex)
             {
-                // Loguj grešku ili baci custom izuzetak ako servis nije dostupan
-                ((ICommunicationObject)client).Abort(); // Ako pukne, abortiraj kanal
-                throw new Exception("Nije moguće povezivanje sa Komponentom 1: " + ex.Message);
+                ((ICommunicationObject)client).Abort();
+                throw new Exception("Failed to connect with information system: " + ex.Message);
             }
         }
     }

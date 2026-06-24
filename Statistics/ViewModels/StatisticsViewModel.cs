@@ -10,6 +10,8 @@ using Statistics.Strategies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel.Channels;
+using System.Windows;
 using System.Windows.Input;
 
 namespace Statistics.ViewModels
@@ -161,8 +163,16 @@ namespace Statistics.ViewModels
             {
                 processor = CreateProcessor();
             }
-            var decorator = new CsvExportDecorator(processor, new CsvWriter("statistics.csv"));
-            decorator.ExportData();
+            var decorator = new CsvExportDecorator(processor, new CsvWriter($"statistics_{processor.GetStatisticsStrategy()}_{FromDate.ToLongDateString()}_{ToDate.ToLongDateString()}.csv"));
+            try
+            {
+                decorator.ProcessData(fromDate, ToDate);
+                MessageBox.Show("Data exported to csv!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private IStatisticsProcessor CreateProcessor()

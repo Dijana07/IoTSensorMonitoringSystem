@@ -2,6 +2,7 @@ using Statistics.Interfaces;
 using Statistics.Models;
 using System;
 using System.Collections.Generic;
+using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,9 +20,9 @@ namespace Statistics.Processing
 			this.writter = writter;
 		}
 
-		public void ExportData()
+		public void ExportData(List<Result> data, DateTime from, DateTime to)
 		{
-			writter.Write(GetData());
+			writter.Write(data, from, to, GetStatisticsStrategy());
 		}
 
         public Dictionary<string, List<Reading>> GetData()
@@ -36,12 +37,18 @@ namespace Statistics.Processing
 
         public List<Result> ProcessData(DateTime from, DateTime to)
         {
-            return processor.ProcessData(from, to);
+            var data = processor.ProcessData(from, to);
+            ExportData(data, from, to);
+            return data;
         }
 
         public void SetStatisticsStrategy(IStatisticsStrategy strategy)
         {
             processor.SetStatisticsStrategy(strategy);
+        }
+
+        public string GetStatisticsStrategy() {
+            return processor.GetStatisticsStrategy();
         }
     }
 }

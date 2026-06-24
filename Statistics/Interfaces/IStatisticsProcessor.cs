@@ -13,5 +13,6 @@ namespace Statistics.Interfaces
         void LoadData(DateTime from, DateTime to);
         List<Result> ProcessData(DateTime from, DateTime to);
         void SetStatisticsStrategy(IStatisticsStrategy strategy);
+        string GetStatisticsStrategy();
 	}
 }

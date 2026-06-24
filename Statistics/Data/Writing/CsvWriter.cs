@@ -1,4 +1,5 @@
 using Statistics.Interfaces;
+using Statistics.Models;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,27 +19,18 @@ namespace Statistics.Data.Writing
             this.path = path;
         }
 
-        public void Write(Dictionary<string, List<Models.Reading>> data)
+        public void Write(List<Result> data, DateTime from, DateTime to, string action)
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine("Period,SensorId,Values,AlarmCount");
+            sb.AppendLine($"Period,SensorId,{action}");
 
-            foreach (var period in data)
+            foreach (var result in data)
             {
-                foreach (var reading in period.Value)
-                {
-                    string values = string.Join(
-                        ";",
-                        reading.Values.Select(v =>
-                            v.ToString(CultureInfo.InvariantCulture)));
-
-                    sb.AppendLine(
-                        $"{period.Key}," +
-                        $"{reading.SensorId}," +
-                        $"\"{values}\"," +
-                        $"{reading.AlarmCount}");
-                }
+                sb.AppendLine(
+                    $"{from.ToShortDateString()} - {to.ToShortDateString()}," +
+                    $"{result.SensorId}," +
+                    $"{result.Value}");
             }
 
             File.WriteAllText(path, sb.ToString());
