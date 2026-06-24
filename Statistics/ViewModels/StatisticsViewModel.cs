@@ -166,7 +166,7 @@ namespace Statistics.ViewModels
             var decorator = new CsvExportDecorator(processor, new CsvWriter($"statistics_{processor.GetStatisticsStrategy()}_{FromDate.ToLongDateString()}_{ToDate.ToLongDateString()}.csv"));
             try
             {
-                decorator.ProcessData(fromDate, ToDate);
+                Results = decorator.ProcessData(fromDate, ToDate);
                 MessageBox.Show("Data exported to csv!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)

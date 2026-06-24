@@ -89,10 +89,6 @@
                         Width="Auto"
                         Binding="{Binding ValuesDisplay}" />
 
-                    <DataGridTextColumn
-                        Header="Alarm Count"
-                        Binding="{Binding AlarmCount}" />
-
                 </DataGrid.Columns>
 
             </DataGrid>
