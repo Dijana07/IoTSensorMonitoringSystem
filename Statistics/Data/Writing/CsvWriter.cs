@@ -23,13 +23,13 @@ namespace Statistics.Data.Writing
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"Period,SensorId,{action}");
+            sb.AppendLine($"Period;SensorId;{action}");
 
             foreach (var result in data)
             {
                 sb.AppendLine(
-                    $"{from.ToShortDateString()} - {to.ToShortDateString()}," +
-                    $"{result.SensorId}," +
+                    $"{from.ToShortDateString()} - {to.ToShortDateString()};" +
+                    $"{result.SensorId};" +
                     $"{result.Value}");
             }
 
