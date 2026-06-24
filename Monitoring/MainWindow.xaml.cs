@@ -29,11 +29,8 @@ namespace Monitoring
             this.DataContext = new MainViewModel();
             try
             {
-                // VAŽNO: Koristite puno ime klase sa prostorom imena
                 var host = new ServiceHost(typeof(Monitoring.Services.TelemetryService));
                 host.Open();
-
-                // Dodajte mali "check" da vidite da li je host otvoren
                 if (host.State == CommunicationState.Opened)
                 {
                     System.Diagnostics.Debug.WriteLine("Servis je uspešno pokrenut!");
@@ -41,7 +38,6 @@ namespace Monitoring
             }
             catch (Exception ex)
             {
-                // Ako ovde pukne, to je razlog zašto servis ne radi
                 MessageBox.Show("Greška pri pokretanju servisa: " + ex.Message);
             }
         }

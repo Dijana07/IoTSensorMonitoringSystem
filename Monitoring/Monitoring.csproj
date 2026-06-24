@@ -117,12 +117,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Data\DataLoader.cs" />
+    <Compile Include="Interfaces\IDataLoader.cs" />
+    <Compile Include="Interfaces\ITelemetryChartService.cs" />
+    <Compile Include="Services\TelemetryChartService.cs" />
     <Compile Include="Services\TelemetryService.cs" />
     <Compile Include="State\AlarmState.cs" />
     <Compile Include="State\ErrorState.cs" />
     <Compile Include="State\SensorState.cs" />
     <Compile Include="State\StableState.cs" />
     <Compile Include="State\UnactiveState.cs" />
+    <Compile Include="Validations\SensorValidator.cs" />
     <Compile Include="ViewModels\MonitoringViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Page Include="MainWindow.xaml">

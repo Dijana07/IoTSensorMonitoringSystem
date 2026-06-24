@@ -15,23 +15,12 @@ namespace Monitoring.Models
 
         public SensorTelemetry Telemetry => telemetry;
 
-        public SensorTelemetryContext(
-            SensorTelemetry telemetry,
-            ISensorStateMapper mapper)
+        public SensorTelemetryContext(SensorTelemetry telemetry, ISensorStateMapper mapper)
         {
             this.telemetry = telemetry;
             stateMapper = mapper;
 
-            currentState = mapper.MapStatusToState(
-                telemetry.Status);
-        }
-
-        public void NextState()
-        {
-            currentState = stateMapper
-                .MapStatusToState(telemetry.Status);
-
-            currentState.HandleState(this);
+            currentState = mapper.MapStatusToState(telemetry.Status);
         }
     }
 }

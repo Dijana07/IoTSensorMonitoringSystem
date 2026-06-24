@@ -9,9 +9,7 @@ namespace Monitoring.Commands
         private Sensor originalState; 
         private Sensor newState; 
 
-        public UpdateSensorCommand(
-            Sensor oldSensor,
-            Sensor newSensor)
+        public UpdateSensorCommand(Sensor oldSensor, Sensor newSensor)
         {
             this.oldSensor = oldSensor;
 

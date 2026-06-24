@@ -4,9 +4,13 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using Monitoring.Commands;
+using Monitoring.Data;
+using Monitoring.Interfaces;
 using Monitoring.Loggers;
 using Monitoring.Mappers;
 using Monitoring.Models;
+using Monitoring.Services;
+using Monitoring.Validations;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -23,10 +27,14 @@ namespace Monitoring.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
+        #region Fields
         private readonly Monitoring.Commands.CommandManager commandManager;
         private readonly LoggerTxt loggerTxt;
         private readonly LoggerXml loggerXml;
         private readonly SensorStateMapper stateMapper;
+        private readonly SensorValidator sensorValidator;
+        private readonly ITelemetryChartService telemetryChartService;
+        private readonly IDataLoader dataLoader;
 
         private readonly string sensorsXmlPath = "sensors.xml";
         private readonly string telemetryXmlPath = "telemetry.xml";
@@ -35,11 +43,16 @@ namespace Monitoring.ViewModels
         // Za obrisane telemetrije koje želimo da vratimo ako korisnik klikne Undo nakon RemoveSensor
         private readonly Dictionary<Guid, SensorTelemetryContext> _telemetryCache = new Dictionary<Guid, SensorTelemetryContext>();
 
+        // Obicne kolekcije senzora i telemetrija koje se prikazuju u UI
         public ObservableCollection<Sensor> Sensors { get; set; }
         public ObservableCollection<SensorTelemetryContext> Telemetries { get; set; }
 
+        // Kolekcije koje se koriste za filtriranje senzora i telemetrija u UI
         private readonly ICollectionView _sensorsView;
         private readonly ICollectionView _telemetriesView;
+        #endregion
+
+        #region Properties
 
         private ObservableCollection<ISeries> series;
         public ObservableCollection<ISeries> Series
@@ -113,13 +126,18 @@ namespace Monitoring.ViewModels
                 _telemetriesView.Refresh();
             }
         }
+        #endregion
 
+        #region Commands
         public System.Windows.Input.ICommand AddSensorCommand { get; }
         public System.Windows.Input.ICommand UpdateSensorCommand { get; }
         public System.Windows.Input.ICommand RemoveSensorCommand { get; }
         public System.Windows.Input.ICommand UndoCommand { get; }
         public System.Windows.Input.ICommand RedoCommand { get; }
         public System.Windows.Input.ICommand NextStateCommand { get; }
+        #endregion
+
+        #region Constructor
 
         public MainViewModel()
         {
@@ -129,29 +147,28 @@ namespace Monitoring.ViewModels
 
             commandManager = new Monitoring.Commands.CommandManager(loggerTxt, systemSensor);
             stateMapper = new SensorStateMapper();
+            sensorValidator = new SensorValidator();
+            telemetryChartService = new TelemetryChartService();
+            dataLoader = new DataLoader(sensorsXmlPath, telemetryXmlPath, stateMapper);
 
             Sensors = new ObservableCollection<Sensor>();
             Telemetries = new ObservableCollection<SensorTelemetryContext>();
 
-            Series = new ObservableCollection<ISeries>
-            {
-                new PieSeries<int> { Values = new ObservableCollection<int> { 0 }, Name = "Stable" },
-                new PieSeries<int> { Values = new ObservableCollection<int> { 0 }, Name = "Alarm" },
-                new PieSeries<int> { Values = new ObservableCollection<int> { 0 }, Name = "Error" },
-                new PieSeries<int> { Values = new ObservableCollection<int> { 0 }, Name = "Unactive" }
-            };
+            Series = telemetryChartService.BuildChart(Telemetries);
 
             // Reakcija na izmene u kolekciji senzora radi automatskog upravljanja telemetrijom
             Sensors.CollectionChanged += Sensors_CollectionChanged;
 
-            // Osluškujemo promene u Telemetries kolekciji (dodavanje/brisanje) kako bismo osveživali grafikon
-            Telemetries.CollectionChanged += (s, e) => UpdateChart();
+            // Osluškujemo promene u Telemetries kolekciji kako bismo osveživali grafikon
+            Telemetries.CollectionChanged += (s, e) => RefreshChart();
 
             _sensorsView = CollectionViewSource.GetDefaultView(Sensors);
             _sensorsView.Filter = FilterSensorsPredicate;
 
             _telemetriesView = CollectionViewSource.GetDefaultView(Telemetries);
             _telemetriesView.Filter = FilterTelemetriesPredicate;
+
+            #region Commands Initialization
 
             AddSensorCommand = new MyICommand(OnAddSensor);
             UpdateSensorCommand = new MyICommand(OnUpdateSensor);
@@ -166,7 +183,7 @@ namespace Monitoring.ViewModels
 
                 PopulateFormFromSelected();
 
-                UpdateChart();
+                RefreshChart();
                 SaveAllToXml();
             });
 
@@ -180,53 +197,26 @@ namespace Monitoring.ViewModels
 
                 PopulateFormFromSelected();
 
-                UpdateChart(); 
+                RefreshChart(); 
                 SaveAllToXml();
             });
 
             NextStateCommand = new MyICommand(OnNextState);
+            #endregion
 
-            LoadAllFromXml();
-            UpdateChart(); 
+            LoadAll();
+            RefreshChart();
         }
+        #endregion
 
-        private void UpdateChart()
+        #region Chart
+        private void RefreshChart()
         {
-
-            int stableCount = Telemetries.Count(t => t.Telemetry.Status == SensorStatus.Stable);
-            int alarmCount = Telemetries.Count(t => t.Telemetry.Status == SensorStatus.Alarm);
-            int errorCount = Telemetries.Count(t => t.Telemetry.Status == SensorStatus.Error);
-            int unactiveCount = Telemetries.Count(t => t.Telemetry.Status == SensorStatus.Unactive);
-
-            Series = new ObservableCollection<ISeries>
-                {
-                    new PieSeries<int>
-            {
-                Values = new[] { stableCount },
-                Name = "Stable",
-                Fill = new SolidColorPaint(SKColors.Green)
-            },
-            new PieSeries<int>
-            {
-                Values = new[] { alarmCount },
-                Name = "Alarm",
-                Fill = new SolidColorPaint(SKColors.Orange)
-            },
-            new PieSeries<int>
-            {
-                Values = new[] { errorCount },
-                Name = "Error",
-                Fill = new SolidColorPaint(SKColors.Red)
-            },
-            new PieSeries<int>
-            {
-                Values = new[] { unactiveCount },
-                Name = "Unactive",
-                Fill = new SolidColorPaint(SKColors.Gray)
-            }
-                };
+            Series = telemetryChartService.BuildChart(Telemetries);
         }
+        #endregion
 
+        #region Sensor Collection Changed Handler
         private void Sensors_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             Random rand= new Random();
@@ -281,56 +271,27 @@ namespace Monitoring.ViewModels
         {
             _sensorsView.Refresh();
         }
+        #endregion
 
-        private void LoadAllFromXml()
+        #region XML Data Loading and Logging
+        private void LoadAll()
         {
             Sensors.CollectionChanged -= Sensors_CollectionChanged;
 
             Sensors.Clear();
             Telemetries.Clear();
 
-            if (File.Exists(sensorsXmlPath))
-            {
-                try
-                {
-                    XDocument doc = XDocument.Load(sensorsXmlPath);
-                    foreach (XElement el in doc.Root.Elements("Sensor"))
-                    {
-                        var sensor = new Sensor
-                        {
-                            Id = Guid.Parse(el.Element("Id").Value),
-                            Name = el.Element("Name").Value,
-                            Type = el.Element("Type").Value,
-                            Location = el.Element("Location").Value,
-                            MinValue = double.Parse(el.Element("MinValue").Value),
-                            MaxValue = double.Parse(el.Element("MaxValue").Value)
-                        };
+            var data = dataLoader.LoadAll();
 
-                        sensor.PropertyChanged += Sensor_PropertyChanged;
-                        Sensors.Add(sensor);
-                    }
-                }
-                catch (Exception ex) { MessageBox.Show($"Error loading sensors: {ex.Message}"); }
+            foreach (var sensor in data.Sensors)
+            {
+                sensor.PropertyChanged += Sensor_PropertyChanged;
+                Sensors.Add(sensor);
             }
 
-            if (File.Exists(telemetryXmlPath))
+            foreach (var telemetry in data.Telemetries)
             {
-                try
-                {
-                    XDocument doc = XDocument.Load(telemetryXmlPath);
-                    foreach (XElement el in doc.Root.Elements("Telemetry"))
-                    {
-                        var raw = new SensorTelemetry
-                        {
-                            SensorId = Guid.Parse(el.Element("SensorId").Value),
-                            DateTime = DateTime.Parse(el.Element("DateTime").Value),
-                            Value = double.Parse(el.Element("Value").Value),
-                            Status = (SensorStatus)Enum.Parse(typeof(SensorStatus), el.Element("Status").Value)
-                        };
-                        Telemetries.Add(new SensorTelemetryContext(raw, stateMapper));
-                    }
-                }
-                catch (Exception ex) { MessageBox.Show($"Error loading telemetry: {ex.Message}"); }
+                Telemetries.Add(telemetry);
             }
 
             Sensors.CollectionChanged += Sensors_CollectionChanged;
@@ -359,10 +320,16 @@ namespace Monitoring.ViewModels
                 MessageBox.Show($"Error saving telemetry history: {ex.Message}");
             }
         }
+        #endregion
 
+        #region Command Management
         private void OnAddSensor()
         {
-            if (!ValidateForm(out double min, out double max)) return;
+            if (!sensorValidator.Validate(EditName, EditType, EditLocation, EditMin, EditMax, out string error, out double min, out double max))
+            {
+                MessageBox.Show(error, "Validation", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             var newSensor = new Sensor
             {
@@ -385,7 +352,14 @@ namespace Monitoring.ViewModels
 
         private void OnUpdateSensor()
         {
-            if (SelectedSensor == null || !ValidateForm(out double min, out double max)) return;
+            if (SelectedSensor == null)
+                return;
+
+            if (!sensorValidator.Validate(EditName, EditType, EditLocation, EditMin, EditMax, out string error, out double min, out double max))
+            {
+                MessageBox.Show(error, "Validation", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             var updatedData = new Sensor { Name = EditName, Type = EditType, Location = EditLocation, MinValue = min, MaxValue = max };
 
@@ -444,17 +418,17 @@ namespace Monitoring.ViewModels
                 currentTelemetry.Telemetry.DateTime = DateTime.Now;
             }
 
-            loggerTxt.Log(
-                new Sensor { Name = "System" },
-                $"Sensor {currentTelemetry.Telemetry.SensorId} transitioned to state {currentTelemetry.Telemetry.Status}");
+            loggerTxt.Log( new Sensor { Name = "System" }, $"Sensor {currentTelemetry.Telemetry.SensorId} transitioned to state {currentTelemetry.Telemetry.Status}");
 
             _telemetriesView.Refresh();
             SelectedTelemetry = currentTelemetry;
 
-            UpdateChart();
+            RefreshChart();
             SaveAllToXml();
         }
+        #endregion
 
+        #region Filtering Methods
         private bool FilterSensorsPredicate(object obj)
         {
             if (obj is Sensor s)
@@ -484,31 +458,14 @@ namespace Monitoring.ViewModels
             }
             return false;
         }
+        #endregion
 
-        private bool ValidateForm(out double min, out double max)
-        {
-            min = 0; max = 0;
-            if (string.IsNullOrWhiteSpace(EditName) || string.IsNullOrWhiteSpace(EditType) || string.IsNullOrWhiteSpace(EditLocation))
-            {
-                MessageBox.Show("All text fields must be filled!", "Validation", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            if (!double.TryParse(EditMin, out min) || !double.TryParse(EditMax, out max))
-            {
-                MessageBox.Show("Min and Max fields must be numbers!", "Validation", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            if (min >= max)
-            {
-                MessageBox.Show("Minimum value must be less than maximum value!", "Validation", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            return true;
-        }
+        #region Form Management
 
         private void PopulateFormFromSelected()
         {
-            if (SelectedSensor == null) return;
+            if (SelectedSensor == null) 
+                return;
             EditName = SelectedSensor.Name;
             EditType = SelectedSensor.Type;
             EditLocation = SelectedSensor.Location;
@@ -521,5 +478,6 @@ namespace Monitoring.ViewModels
             EditName = string.Empty; EditType = string.Empty; EditLocation = string.Empty;
             EditMin = "0"; EditMax = "100";
         }
+        #endregion
     }
 }
