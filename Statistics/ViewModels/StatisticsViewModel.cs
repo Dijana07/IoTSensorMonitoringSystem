@@ -10,6 +10,7 @@ using Statistics.Strategies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.ServiceModel.Channels;
 using System.Windows;
 using System.Windows.Input;
@@ -21,7 +22,9 @@ namespace Statistics.ViewModels
     public class StatisticsViewModel : ViewModelBase
     {
         private IStatisticsProcessor processor;
-
+        private IDataProvider dataProvider;
+        private Dictionary<string, List<Reading>> data = new Dictionary<string, List<Reading>>();
+        
         #region Properties
 
         private DateTime fromDate;
@@ -67,6 +70,7 @@ namespace Statistics.ViewModels
                 if (processor != null)
                 {
                     processor.SetStatisticsStrategy(value);
+                    CreateProcessor();
                 }
                 OnPropertyChanged(nameof(SelectedStrategy));
             }
@@ -79,6 +83,7 @@ namespace Statistics.ViewModels
             set
             {
                 selectedDataSource = value;
+                CreateDataProvider();
                 OnPropertyChanged(nameof(SelectedDataSource));
             }
         }
@@ -112,6 +117,8 @@ namespace Statistics.ViewModels
 
         public StatisticsViewModel()
         {
+            dataProvider  = new SensorTelemetryAdapter(new FileDataReader("seedData.json"));
+
             Strategies = new List<IStatisticsStrategy>
             {
                 new AverageStrategy(),
@@ -140,42 +147,71 @@ namespace Statistics.ViewModels
 
         private void LoadData()
         {
-            processor = CreateProcessor();
-            processor.LoadData(FromDate, ToDate);
-            LoadedReadings = processor
-                .GetData()
-                .SelectMany(x => x.Value)
-                .ToList();
+            CreateDataProvider();
+
+            data.Clear();
+
+            var loadedData = dataProvider.GetData(FromDate, ToDate);
+            if (loadedData != null)
+            {
+                data.Add(loadedData.Item1, loadedData.Item2);
+
+                LoadedReadings = loadedData.Item2.ToList();
+            }
+            else
+            {
+                LoadedReadings = new List<Reading>();
+            }
         }
 
         private void ProcessData()
         {
-            if (processor == null)
+            if (data.Any())
             {
-                processor = CreateProcessor();
+                if (processor == null)
+                {
+                    processor = CreateProcessor();
+                }
+                Results = processor.ProcessData(FromDate, ToDate, data);
             }
-            Results = processor.ProcessData(FromDate, ToDate);
+            else
+            {
+                MessageBox.Show("You have to load data first!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ExportData()
         {
-            if (processor == null)
+            if (data.Any())
             {
-                processor = CreateProcessor();
-            }
-            var decorator = new CsvExportDecorator(processor, new CsvWriter($"statistics_{processor.GetStatisticsStrategy()}_{FromDate.ToLongDateString()}_{ToDate.ToLongDateString()}.csv"));
-            try
+                if (processor == null)
+                {
+                    processor = CreateProcessor();
+                }
+                var decorator = new CsvExportDecorator(processor, new CsvWriter
+                    ($"statistics_{processor.GetStatisticsStrategy()}_{FromDate.ToLongDateString()}_{ToDate.ToLongDateString()}.csv"));
+                try
+                {
+                    Results = decorator.ProcessData(fromDate, ToDate, data);
+                    MessageBox.Show("Data exported to csv!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                }
+            else
             {
-                Results = decorator.ProcessData(fromDate, ToDate);
-                MessageBox.Show("Data exported to csv!", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("You have to load data first!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private IStatisticsProcessor CreateProcessor()
+        {
+            return new StatisticsProcessor(SelectedStrategy);
+        }
+
+        private void CreateDataProvider()
         {
             IDataReader reader;
 
@@ -190,12 +226,7 @@ namespace Statistics.ViewModels
                     break;
             }
 
-            IDataProvider provider =
-                new SensorTelemetryAdapter(reader);
-
-            return new StatisticsProcessor(
-                SelectedStrategy,
-                provider);
+            dataProvider = new SensorTelemetryAdapter(reader);
         }
     }
 }

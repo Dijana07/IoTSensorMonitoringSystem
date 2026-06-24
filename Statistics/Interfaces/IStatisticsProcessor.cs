@@ -9,9 +9,7 @@ namespace Statistics.Interfaces
 {
     public interface IStatisticsProcessor
 	{
-        Dictionary<string, List<Reading>> GetData();
-        void LoadData(DateTime from, DateTime to);
-        List<Result> ProcessData(DateTime from, DateTime to);
+        List<Result> ProcessData(DateTime from, DateTime to, Dictionary<string, List<Reading>> data);
         void SetStatisticsStrategy(IStatisticsStrategy strategy);
         string GetStatisticsStrategy();
 	}

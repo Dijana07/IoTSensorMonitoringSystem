@@ -11,35 +11,16 @@ namespace Statistics.Processing
     public class StatisticsProcessor : IStatisticsProcessor
 	{
 		private IStatisticsStrategy strategy;
-		private Dictionary<string, List<Reading>> data;
-		private IDataProvider dataProvider;
 
-		public StatisticsProcessor(IStatisticsStrategy strategy, IDataProvider dataProvider)
+		public StatisticsProcessor(IStatisticsStrategy strategy)
 		{
 			this.strategy = strategy;
-			this.dataProvider = dataProvider;
-			data = new Dictionary<string, List<Reading>>();
 		}
 
-        public Dictionary<string, List<Reading>> GetData()
-        {
-            return data;
-        }
-
-        public void LoadData(DateTime from, DateTime to)
+        public List<Result> ProcessData(DateTime from, DateTime to, Dictionary<string, List<Reading>> data)
 		{
-			var loadedData = dataProvider.GetData(from, to);
-			if (loadedData != null) 
-			{
-				data.Add(loadedData.Item1, loadedData.Item2);
-			}
-		}
-
-        public List<Result> ProcessData(DateTime from, DateTime to)
-        {
-            string key = $"{from:yyyy-MM-dd}_{to:yyyy-MM-dd}";
-			var data = dataProvider.GetData(from, to);
-			return strategy.Calculate(data.Item2);
+            var values = data.Values.SelectMany(x => x).ToList();
+            return strategy.Calculate(values);
         }
 
 		public void SetStatisticsStrategy(IStatisticsStrategy strategy)

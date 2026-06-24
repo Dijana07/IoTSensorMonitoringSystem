@@ -25,21 +25,11 @@ namespace Statistics.Processing
 			writter.Write(data, from, to, GetStatisticsStrategy());
 		}
 
-        public Dictionary<string, List<Reading>> GetData()
+        public List<Result> ProcessData(DateTime from, DateTime to, Dictionary<string, List<Reading>> data)
         {
-            return processor.GetData();
-        }
-
-        public void LoadData(DateTime from, DateTime to)
-        {
-            processor.LoadData(from, to);
-        }
-
-        public List<Result> ProcessData(DateTime from, DateTime to)
-        {
-            var data = processor.ProcessData(from, to);
-            ExportData(data, from, to);
-            return data;
+            var processedData = processor.ProcessData(from, to, data);
+            ExportData(processedData, from, to);
+            return processedData;
         }
 
         public void SetStatisticsStrategy(IStatisticsStrategy strategy)
