@@ -170,7 +170,7 @@ namespace Statistics.ViewModels
             {
                 if (processor == null)
                 {
-                    processor = CreateProcessor();
+                    CreateProcessor();
                 }
                 Results = processor.ProcessData(FromDate, ToDate, data);
             }
@@ -186,7 +186,7 @@ namespace Statistics.ViewModels
             {
                 if (processor == null)
                 {
-                    processor = CreateProcessor();
+                    CreateProcessor();
                 }
                 var decorator = new CsvExportDecorator(processor, new CsvWriter
                     ($"statistics_{processor.GetStatisticsStrategy()}_{FromDate.ToLongDateString()}_{ToDate.ToLongDateString()}.csv"));
@@ -206,9 +206,9 @@ namespace Statistics.ViewModels
             }
         }
 
-        private IStatisticsProcessor CreateProcessor()
+        private void CreateProcessor()
         {
-            return new StatisticsProcessor(SelectedStrategy);
+            processor = new StatisticsProcessor(SelectedStrategy);
         }
 
         private void CreateDataProvider()
